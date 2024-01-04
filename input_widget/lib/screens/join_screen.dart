@@ -32,8 +32,13 @@ class _JoinScreenState extends State<JoinScreen> {
   // 입력 날짜
   String _date = '';  // 2023/01/01 ~ 2023/01/05
 
+  bool _isDateRangeSelected = false; // 날짜 범위가 선택되었는지 여부를 추적하기 위한 변수
+
   // 수량
-  final TextEditingController _countCotroller = TextEditingController();
+  final TextEditingController _countController = TextEditingController(text: '1');  // 초기 값을 1로 지정
+  int _count = 1;
+  final int _maxCount = 100;  // 최댓값
+  final int _minCount = 1;    // 최솟값
 
   // 달력 설정
   // 설정 정보
@@ -242,48 +247,82 @@ class _JoinScreenState extends State<JoinScreen> {
                         config: config,
                         value: _dateDefaultValue,
                         onValueChanged: (dates) {
-                            // multi
-                            // 2개만 선택
-                            // if( dates.length > 2 ) {
-                            //   setState(() {
-                            //     _dateDefaultValue = [];
-                            //   });
-                            //   return;
-                            // }
-                            setState(() => _dateDefaultValue = dates);
-                            print('달력 날짜 : ${dates}');
+                          // 이미 날짜 범위가 선택된 상태에서 한 번 더 선택하면 선택 취소
+                          if (_isDateRangeSelected && dates != null && dates.length == 2) {
+                            setState(() => _dateDefaultValue = []);
+                            _isDateRangeSelected = false;
+                            return;
+                          }
 
-                            // 2023/01/01 ~ 2023/01/06 포맷팅
+                          setState(() => _dateDefaultValue = dates);
+                          print('달력 날짜 : ${dates}');
+
+                          if (dates != null && dates.length == 2) {
+                            _isDateRangeSelected = true;
                             var start = DateFormat('yyyy/MM/dd').format(dates[0]!);
                             var end = DateFormat('yyyy/MM/dd').format(dates[1]!);
                             var date = '${start} ~ ${end}';
                             setState(() {
                               _date = date;
                             });
-                        }
+                          } else {
+                            _isDateRangeSelected = false;
+                          }
+                        },
                       ),
                       
                       // 수량 
+                      const Text('수량:'),
                       TextField(
+                        textAlign: TextAlign.center,  // 텍스트 가운데 정렬
+                        controller: _countController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
                         decoration: InputDecoration(
-                          labelText: '1',
                           prefixIcon: ElevatedButton(
                                         onPressed: () {
-                                          _countCotroller.text = ((_countCotroller.text as int) -1) as String;
-                                        }, 
-                                        child: Text('-'),
-                                      ),
-                          suffixIcon: ElevatedButton(
-                                        onPressed: () {
-                                          _countCotroller.text = ((_countCotroller.text as int) +1) as String;
+                                          if( _maxCount < _count ) {
+                                            return;
+                                          }
+                                          setState(() {
+                                            _count++;
+                                          });                  
+                                          _countController.text = _count.toString();
                                         }, 
                                         child: Text('+'),
                                       ),
+                          suffixIcon: ElevatedButton(
+                                        onPressed: () {
+                                          if( _minCount >= _count ) {
+                                            return;
+                                          }
+                                          setState(() {
+                                            _count--;
+                                          });                  
+                                          _countController.text = _count.toString();
+                                        }, 
+                                        child: Text('-'),
+                                      ),
                         ),
+                        onChanged: (value) {
+                          // int.parse("10") : String ➡ int 로 변환
+                          // int.parse("")   : 빈 문자열을 int 변환하면 예외발생
+                          // int.tryParse("숫자가아닌문자열") ➡ 예외 대신 null 로 반환
+                          int newValue = int.tryParse(value) ?? -1;
+                          // 값이 없을 때
+                          if( newValue == -1 ) { 
+                            setState(() { _count = 1; });
+                            return; 
+                          } 
+                          if( newValue >= _maxCount ) {newValue = _maxCount;}
+                          if( newValue < _minCount ) {newValue = _minCount;}
+                          setState(() {
+                            _count = newValue;
+                          });
+                          _countController.text = newValue.toString();
+                        },
                       ),
 
                       // 회원 가입 버튼
@@ -299,6 +338,7 @@ class _JoinScreenState extends State<JoinScreen> {
                           print('생년월일 : ${_birthController.text}');
                           print('신분증 종류 : ${_idType}');
                           print('선택 날짜 : ${_date}');
+                          print('수량 : ${_countController.text}');
                         }
                       },
                       style: ElevatedButton.styleFrom(
