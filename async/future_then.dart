@@ -4,6 +4,11 @@ Future<String> fetchData() {
   });
 }
 
+void fetchDataAwait() async {
+  String result = await fetchData();
+  print(result);
+}
+
 void main(List<String> args) {
   // then(data)
   // : Future가 완료된 후, 반환 값 data를 가져와서 특정 작업을 수행하는 메소드
@@ -12,5 +17,7 @@ void main(List<String> args) {
     print('추가 작업');
   });
 
-  print('요청 중');
+  fetchDataAwait();
+  
+  print('요청 중...');
 }
