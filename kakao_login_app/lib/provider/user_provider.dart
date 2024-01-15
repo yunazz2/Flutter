@@ -16,7 +16,7 @@ class UserProvider extends ChangeNotifier {
   User get userInfo => _userInfo;     // 전역 변수
   bool get isLogin => _loginStat;     // 전역 변수
 
-  // 카카오 로그인 요청
+  // 카카오 계정으로 로그인 요청
   Future<void> kakaoLogin() async {
 
     try {
@@ -40,7 +40,7 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 카카오톡 로그인 요청
+  // 카카오톡으로 로그인 요청
   Future<void> kakaoTalkLogin() async {
 
     try {
@@ -70,6 +70,7 @@ class UserProvider extends ChangeNotifier {
     try {
       _userInfo = await UserApi.instance.me();
       print('사용자 정보 요청 성공~!');
+      print('userInfo : ${_userInfo}');
       print('id : ${_userInfo.id}');
       print('nickname : ${_userInfo.kakaoAccount?.profile?.nickname}');
     }
@@ -109,6 +110,20 @@ class UserProvider extends ChangeNotifier {
     else {
       print('발급된 토큰 없음');
       _loginStat = false;
+    }
+    notifyListeners();
+  }
+
+  // 로그아웃
+  Future<void> kakaoLogout() async {
+    try {
+      // 로그인 토큰 정보 삭제 등 로그아웃 처리 - api가 해줌
+      await UserApi.instance.logout();
+      _loginStat = false;
+      print('로그아웃 성공');
+    }
+    catch (error) {
+      print('로그아웃 실패');
     }
     notifyListeners();
   }
